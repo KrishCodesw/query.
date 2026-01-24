@@ -35,7 +35,6 @@ export default function SignInPage() {
       setError(data.error || "Sign in failed");
     }
   };
-  // ------------------------------------
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -53,10 +52,8 @@ export default function SignInPage() {
           </p>
         </div>
 
-        {/* Card */}
         <div className="bg-white py-8 px-6 shadow-xl rounded-2xl border border-gray-100 sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email address
@@ -75,8 +72,6 @@ export default function SignInPage() {
                 />
               </div>
             </div>
-
-            {/* Password Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Password

@@ -13,7 +13,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { motion } from "framer-motion"; // Optional: Delete if you don't use framer-motion
+// import { motion } from "framer-motion"; // Optional: Delete if you don't use framer-motion
 
 export default function SignUpPage() {
   // --- EXISTING LOGIC (UNTOUCHED) ---

@@ -1,3 +1,4 @@
+//prisma singleton client 
 import { PrismaClient } from "./generated/prisma/client";
 
 declare global {

@@ -1,4 +1,4 @@
-// lib/auth.utils.ts
+// lib/auth.utils.ts file
 
 import * as bcrypt from 'bcrypt';
 
