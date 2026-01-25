@@ -101,7 +101,7 @@ function QueryExplainerContent({ isPro: initialIsPro }: { isPro?: boolean }) {
           console.log("User logged in with guest history. Syncing...");
 
           // 1. Send local history to backend
-          await fetch("/api/explained_queries/sync", {
+          await fetch("/explained_queries/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ guestHistory: history }),
@@ -120,7 +120,7 @@ function QueryExplainerContent({ isPro: initialIsPro }: { isPro?: boolean }) {
       // B. FETCH STRATEGY: Always fetch fresh DB data when logged in
       try {
         if (syncStatus !== "syncing") {
-          const res = await fetch("/api/explained_queries/get");
+          const res = await fetch("/explained_queries/get");
           if (res.ok) {
             const data = await res.json();
             // Ensure we handle the response correctly (array vs object)
@@ -172,7 +172,7 @@ function QueryExplainerContent({ isPro: initialIsPro }: { isPro?: boolean }) {
       // Save to database if user is signed in
       if (isPro) {
         try {
-          await fetch("/api/explained_queries/save", {
+          await fetch("/explained_queries/save", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -287,7 +287,7 @@ function QueryExplainerContent({ isPro: initialIsPro }: { isPro?: boolean }) {
                     else {
                       try {
                         const res = await fetch(
-                          `/api/explained_queries/get?id=${item.id}`,
+                          `/explained_queries/get?id=${item.id}`,
                         );
                         if (res.ok) {
                           const data = await res.json();
