@@ -268,24 +268,26 @@ export default function LandingPage() {
               <div className="absolute inset-[-50%] bg-[conic-gradient(from_0deg,#f59e0b,#ef4444,#8b5cf6,#3b82f6,#10b981,#f59e0b)] animate-[spin_2s_linear_infinite]" />
 
               {/* 3. THE CONTENT LAYER: Creates the "mask" with inset-1 (4px thickness) */}
-              <div className="absolute inset-1 rounded-lg  overflow-hidden z-10">
-                {/* --- PLACE ALL YOUR VIDEO UI & CONTENT HERE --- */}
+              {/* <div className="absolute inset-1 rounded-lg  overflow-hidden z-10"> */}
+              {/* --- PLACE ALL YOUR VIDEO UI & CONTENT HERE --- */}
 
-                {/* Mock Video UI */}
-                <div className="absolute top-0 left-0 right-0 h-10 bg-white/5 flex items-center px-4 gap-2 border-b border-white/5 z-20 backdrop-blur-sm">
-                  <div className="h-3 w-3 rounded-full bg-red-500/50" />
-                  <div className="h-3 w-3 rounded-full bg-yellow-500/50" />
-                  <div className="h-3 w-3 rounded-full bg-green-500/50" />
-                  <div className="ml-4 h-5 w-64 rounded bg-white/5" />
-                </div>
+              {/* Mock Video UI */}
 
-                {/* Video Placeholder */}
-                <div className="h-full w-full flex items-center justify-center bg-linear-to-br from-[#0f172a] to-[#020617]">
-                  <div className="text-center relative z-0">
-                    {/* ... rest of your content ... */}
-                  </div>
+              {/* Video Placeholder */}
+              <div className="h-full w-full flex items-center justify-center bg-linear-to-br from-[#0f172a] to-[#020617]">
+                <div className="text-center relative z-0">
+                  {/* ... rest of your content ... */}
+                  <video
+                    src="/master.mp4"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover" // Optional: Ensures it fills the space
+                  />
                 </div>
               </div>
+              {/* </div> */}
             </motion.div>
           </div>
         </div>
