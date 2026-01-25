@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-
+import React, { Suspense } from "react";
 import { useHistory } from "@/components/hooks/useHistory";
 import HeroSection from "@/components/ui/Hero";
 import { LogOut, User, CheckCircle2, HomeIcon } from "lucide-react";
@@ -124,7 +124,9 @@ export default function HomePage() {
             If user exists -> isPro={true} -> Unlimited Queries 
             If user null -> isPro={false} -> 2 Query Limit
         */}
-        <HeroSection isPro={!!user} />
+        <Suspense fallback={<div>Loading...</div>}>
+          <HeroSection isPro={!!user} />
+        </Suspense>
       </div>
     </div>
   );

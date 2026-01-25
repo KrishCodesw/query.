@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import React, { Suspense } from "react";
 import Link from "next/link";
-import { useAuthStore } from "@/lib/store/useAuthStore"; // Import Auth Store
+import { useAuthStore } from "@/lib/store/useAuthStore";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import {
@@ -28,6 +30,8 @@ import {
 } from "lucide-react";
 import { useHistory } from "@/components/hooks/useHistory";
 
+// --- REMOVED THE TOP-LEVEL searchParams CALL HERE ---
+
 // Helper for conditional classes
 function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(" ");
@@ -35,12 +39,11 @@ function cn(...classes: (string | undefined | null | false)[]) {
 
 const GUEST_LIMIT = 2;
 
-export default function QueryCorrector({
-  isPro: initialIsPro,
-}: {
-  isPro?: boolean;
-}) {
-  // --- 1. AUTH & STORE HOOKS ---
+function QueryCorrectorContent({ isPro: initialIsPro }: { isPro?: boolean }) {
+  // --- 1. MOVED HOOK INSIDE THE COMPONENT ---
+  const searchParams = useSearchParams();
+
+  // --- 2. AUTH & STORE HOOKS ---
   const { user, logout } = useAuthStore();
 
   // Determine Pro status: True if passed as prop OR if user is logged in
@@ -56,7 +59,7 @@ export default function QueryCorrector({
     isLoaded,
   } = useHistory();
 
-  // --- 2. STATE ---
+  // --- 3. STATE ---
   const [input, setInput] = useState("");
   const [output, setOutput] = useState<{
     original: string;
@@ -68,22 +71,27 @@ export default function QueryCorrector({
   } | null>(null);
 
   const [loading, setLoading] = useState(false);
-
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  // Sync State
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "done">(
     "idle",
   );
+
+  // Optional: Handle URL params if you want to support ?prompt=...
+  useEffect(() => {
+    const prompt = searchParams.get("prompt");
+    if (prompt) {
+      setInput(prompt);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     const fetchDbHistory = async () => {
       if (user && isLoaded) {
         try {
           const res = await fetch("/api/corrected_queries/get");
           const data = await res.json();
-
           setDbHistory(data.reverse()); // latest first
         } catch (err) {
           console.error("Failed to fetch DB history", err);
@@ -93,26 +101,20 @@ export default function QueryCorrector({
     fetchDbHistory();
   }, [user, isLoaded]);
 
-  // --- 3. SYNC LOGIC (Moves Guest History to Backend on Login) ---
+  // --- 4. SYNC LOGIC ---
   useEffect(() => {
     const syncGuestData = async () => {
-      // Run ONLY if: User is logged in, Local history exists, and we haven't synced yet
       if (user && isLoaded && history.length > 0 && syncStatus === "idle") {
         setSyncStatus("syncing");
         try {
           console.log("User logged in. Syncing guest data...");
-
           await fetch("/api/queries/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ guestHistory: history }),
           });
-
-          // Clear local storage after success
           clearHistory();
           setSyncStatus("done");
-
-          // Reset status after a delay so the toast disappears
           setTimeout(() => setSyncStatus("idle"), 3000);
         } catch (error) {
           console.error("Sync failed", error);
@@ -120,20 +122,17 @@ export default function QueryCorrector({
         }
       }
     };
-
     syncGuestData();
   }, [user, history, isLoaded, clearHistory, syncStatus]);
 
-  // --- 4. HANDLERS ---
+  // --- 5. HANDLERS ---
   const handleLogout = async () => {
     await logout();
-    // Logic will automatically re-render component as Guest
   };
 
   const handleGenerate = async () => {
     if (!input.trim()) return;
 
-    // Check limits before calling API
     if (!isPro && history.length >= GUEST_LIMIT) {
       setShowLimitModal(true);
       return;
@@ -168,8 +167,6 @@ export default function QueryCorrector({
         confidence: rawData.confidence || 0,
       };
 
-      //_______________________________________________________________________________________________________________________________________________________________________
-
       if (isPro) {
         try {
           await fetch("/api/corrected_queries/save", {
@@ -191,8 +188,6 @@ export default function QueryCorrector({
             undefined,
             processedData,
           );
-
-          // addToHistory(input, processedData.corrected);
         } catch (saveError) {
           console.error("Failed to save query to DB", saveError);
         }
@@ -211,9 +206,6 @@ export default function QueryCorrector({
       }
 
       setOutput(processedData);
-      //_______________________________________________________________________________________________________________________________________________________________________
-
-      // addToHistory(input, processedData.corrected);
     } catch (err) {
       console.error(err);
       setOutput({
@@ -227,6 +219,7 @@ export default function QueryCorrector({
       setLoading(false);
     }
   };
+
   const mergedHistory = [...dbHistory, ...history];
 
   const copyToClipboard = (text: string, key: string) => {
@@ -253,12 +246,9 @@ export default function QueryCorrector({
       {/* --- SIDEBAR --- */}
       <aside
         className={cn(
-          // 1. FIXED on mobile (floats on top), RELATIVE on desktop (sits next to content)
           "fixed inset-y-0 left-0 z-40 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out lg:relative lg:z-auto",
-
-          // 2. Control visibility
           sidebarOpen
-            ? "translate-x-0 shadow-2xl lg:shadow-none w-80" // Mobile: Shadow added
+            ? "translate-x-0 shadow-2xl lg:shadow-none w-80"
             : "-translate-x-full lg:translate-x-0 lg:w-0 lg:overflow-hidden",
         )}
       >
@@ -301,7 +291,8 @@ export default function QueryCorrector({
             </div>
 
             <div className="space-y-1">
-              {History.length === 0 && (
+              {/* --- FIX: Use mergedHistory.length instead of History.length --- */}
+              {mergedHistory.length === 0 && (
                 <div className="px-3 py-4 text-center text-sm text-slate-400 italic">
                   No queries yet.
                 </div>
@@ -665,5 +656,19 @@ export default function QueryCorrector({
         </div>
       )}
     </div>
+  );
+}
+
+export default function QueryCorrectorPage(props: any) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center bg-slate-50">
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        </div>
+      }
+    >
+      <QueryCorrectorContent {...props} />
+    </Suspense>
   );
 }
