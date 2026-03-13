@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from src.ai.gemini import Gemini
 from src.ai.querycorrector import QueryCorrector
 from src.ai.queryexplainer import QueryExplainer
+from src.ai.test_sql_json import SQLtoER
 from typing import List, Optional
 from dotenv import load_dotenv
 load_dotenv()
@@ -129,3 +130,54 @@ async def explainquery(request:QueryExplainerRequest):
         raise ValueError("QueryExplainer did not return a valid dict response")
 
     return QueryExplainerResponse(**result)
+
+
+def load_Sqltoer_system_prompt():
+        base_dir=os.path.dirname(os.path.abspath(__file__))
+        prompt_path=os.path.join(base_dir,"prompts","structure_sql_ai_systemprompt.md")
+        with open(prompt_path,encoding="utf-8") as f:
+            return f.read()
+
+sqltoer_prompt=load_Sqltoer_system_prompt()
+sqltoer_platform=SQLtoER(api_key=gemini_api_key,structure_sql_ai_systemprompt=sqltoer_prompt)
+
+class SQLStructureRequest(BaseModel):
+    sql_ddl: str
+
+class EntityModel(BaseModel):
+    name: str
+    type: str
+    attributes: List[Dict[str, Any]]
+    ownerEntity: Optional[str] = None
+
+class RelationshipModel(BaseModel):
+    name: str
+    type: str
+    entities: List[Dict[str, Any]]
+    attributes: List[Any] = []
+
+class SpecializationModel(BaseModel):
+    superclass: str
+    subclasses: List[str]   
+    type: str
+    participation: str
+
+class ERModelSchema(BaseModel):
+    entities: List[EntityModel]
+    relationships: List[RelationshipModel]
+    specializations: Optional[List[SpecializationModel]] = []
+
+class SQLStructureResponse(BaseModel):
+    conceptual_er_model: ERModelSchema
+
+@app.post("/structure_sql", response_model=SQLStructureResponse)
+async def structure_sql(request: SQLStructureRequest):
+   
+    result = sqltoer_platform.chat(request.sql_ddl)
+
+    # Basic validation to ensure the result is a dictionary/JSON object
+    if not isinstance(result, dict):
+        raise ValueError("SQLtoER did not return a valid dict response")
+
+    # The result matches the JSON structure, so we wrap it in our response model
+    return SQLStructureResponse(conceptual_er_model=result)
