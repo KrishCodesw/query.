@@ -108,13 +108,13 @@ export async function GET(req: Request) {
     });
 
     // 5. Set the session cookie
-   (await cookies()).set(COOKIE_NAME, session.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      expires: expires_at,
-      path: '/',
-      sameSite: 'lax',
-    });
+ cookies().set(COOKIE_NAME, session.id, {
+  httpOnly: true,
+  secure: true,
+  expires: expires_at,
+  path: '/',
+  sameSite: 'lax',
+});
 
     // 6. Redirect user to your app's dashboard
     return NextResponse.redirect(new URL('/', appUrl));
